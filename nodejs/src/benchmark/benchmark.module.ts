@@ -4,6 +4,5 @@ import { BenchmarkService } from './benchmark.service';
 
 @Module({
   controllers: [BenchmarkController],
-  providers: [BenchmarkService]
 })
 export class BenchmarkModule {}
