@@ -1,0 +1,18 @@
+config:
+  target: http://localhost:3000
+  phases:
+    - duration: 30
+      arrivalRate: 10
+      rampTo: 30
+      name: Spike phase
+scenarios:
+  - flow:
+    - post:
+        url: "/benchmark"
+        headers:
+          Content-Type: application/json
+        json:
+          name: "blah"
+          password: "123456"
+        expect:
+          - statusCode: 201
