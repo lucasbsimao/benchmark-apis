@@ -1,28 +1,16 @@
-import { Body, Controller, Logger, Post } from '@nestjs/common';
-import { CreateUserRequestDto } from './createUserRequest.dto';
-import * as crypto from 'crypto';
-import { CreateUserResponseDto } from './createUserResponse.dto';
+import { Body, Controller, Get, Logger } from '@nestjs/common';
 
 @Controller('benchmark')
 export class BenchmarkController {
     private readonly logger = new Logger(BenchmarkController.name);
 
-    @Post()
-    async createUser(@Body() createUserDto: CreateUserRequestDto) : Promise<CreateUserResponseDto> {
+    @Get()
+    async createUser() : Promise<String> {
 
-        
+        await this.sleep(30000);
 
-        return await this.test(createUserDto);
+        return "blz";
     }
-
-    async test(createUserDto: CreateUserRequestDto) : Promise<CreateUserResponseDto> {
-        let hashed = crypto.createHash("sha256").update(createUserDto.name).digest("base64");
-        for (let i = 0; i < 100000; i++){
-
-            hashed = crypto.createHash("sha256").update(hashed).digest("base64");
-        }
-
-        return new CreateUserResponseDto(hashed);
-    }
+    sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 }
