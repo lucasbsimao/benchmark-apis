@@ -16,7 +16,7 @@ class BenchmarkController {
 
         for (i in 1..n) {
             val md = MessageDigest.getInstance("SHA-256")
-            md.digest(contents.toByteArray(Charsets.UTF_8))
+            md.digest(contents.toByteArray())
         }
 
         return "OK"

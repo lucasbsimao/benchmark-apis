@@ -1,12 +1,10 @@
 package com.benchmark.domain;
 
-import org.apache.commons.io.IOUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
 @RestController
