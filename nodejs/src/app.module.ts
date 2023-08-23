@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { BenchmarkModule } from './benchmark/benchmark.module';
+import { BenchmarkModule } from './domain/benchmark.module';
 
 @Module({
   imports: [BenchmarkModule]

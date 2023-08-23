@@ -3,16 +3,11 @@ config:
   phases:
     - duration: 30
       arrivalRate: 10
-      rampTo: 30
-      name: Spike phase
+      name: benchmark
 scenarios:
   - flow:
-    - post:
-        url: "/benchmark"
-        headers:
-          Content-Type: application/json
-        json:
-          name: "blah"
-          password: "123456"
+    - get:
+        url: "/benchmark?n=1"
         expect:
-          - statusCode: 201
+          - equals:
+            - "OK"
