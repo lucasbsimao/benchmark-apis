@@ -1,13 +1,16 @@
 config:
   target: http://localhost:8080
   phases:
-    - duration: 30
+    - duration: 60
       arrivalRate: 10
-      name: benchmark
+      name: benchmark warm up
+    - duration: 60
+      arrivalRate: 300
+      name: benchmark spike
 scenarios:
   - flow:
     - get:
-        url: "/benchmark?n=1"
+        url: "/benchmark?n=100"
         expect:
           - equals:
             - "OK"
