@@ -5,8 +5,9 @@ TRACK_PID=""
 
 USE_STABLE_STATE=$1
 
-function cleanup {
-    echo "Cleaning up..."
+
+function killProccesses {
+    echo "Killing processes..."
     
     if [ -n "$TRACK_PID" ]; then
         kill -9 "$TRACK_PID"
@@ -15,9 +16,13 @@ function cleanup {
     if [ -n "$EXEC_PID" ]; then
         kill -9 "$EXEC_PID"
     fi
+}
 
-    rm -f "$LOCK_FILE"
+function cleanup {
+    echo "Cleaning up..."
 
+    killProccesses
+    
     exit 0
 }
 
@@ -36,10 +41,23 @@ function setup {
     cp txt /tmp/
 }
 
+function runPlotUsage {
+    
+    if [ ! -d "benchmark" ]; then
+        python3 -m venv benchmark
+
+        source benchmark/bin/activate
+
+        pip install matplotlib
+    fi
+
+    python3 plot_usage_graphs.py
+}
+
 function checkCpuStability {
     current_cpu_usage=$(ps -p $EXEC_PID -o %cpu | tail -n 1)
 
-    ($last_cpu_usage -eq 0) && last_cpu_usage=$current_cpu_usage
+    [ "$last_cpu_usage" == "0" ] && last_cpu_usage=$current_cpu_usage
 
     if command -v python &>/dev/null; then
         python_cmd="python"
@@ -121,7 +139,7 @@ function runBenchmark {
     fi
 
     while true; do
-        USAGE=$(sh -c "ps -p $EXEC_PID -o %cpu,%mem | awk 'NR==2 {print \$1\",\"\$2\";\"}'")
+        USAGE=$(sh -c "ps -p $EXEC_PID -o %cpu,%mem | awk 'NR==2 {print \$1\",\"\$2}'")
         echo "$SECONDS,$USAGE" >> "$OUTPUT_FILE"
         sleep 1
     done &
@@ -206,8 +224,9 @@ done
     fi
     
     runBenchmark
-    cleanup
+    killProccesses
 
+    runPlotUsage
 }
 
 main

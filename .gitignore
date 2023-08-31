@@ -1,2 +1,6 @@
 node_modules
 test-report.json*
+
+benchmark
+cpu_ram_plots.png
+output.csv
