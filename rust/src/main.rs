@@ -5,12 +5,13 @@
 use std::fs;
 use sha256::{digest};
 
-#[get("/<n>")]
+#[get("/?<n>")]
 fn hello(n: u8) -> String {
     let contents = fs::read_to_string("txt")
         .expect("Should have been able to read the file");
 
     //println!("With text:\n{contents}");
+    //println!("{}", n);
 
     for _ in 0..n {
         let _ = digest(&contents);
