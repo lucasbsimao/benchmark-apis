@@ -10,24 +10,14 @@ import (
 	"crypto/sha256"
     "encoding/hex"
 
-    "github.com/gin-gonic/gin"
+    "github.com/go-chi/chi"
 )
 
-func get(c *gin.Context) {
+func get(w http.ResponseWriter, r *http.Request) {
 
-	nStr := c.Query("n")
+	nStr := chi.URLParam(r, "n")
 
-	if nStr == "" {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "Query 'n' is missing or empty"})
-        return
-    }
-
-    // Convert the string to an integer
     n, err := strconv.Atoi(nStr)
-    if err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "Query 'n' must be an integer."})
-        return
-    }
 
 	data, err := os.ReadFile("txt")
     if err != nil {
@@ -45,12 +35,12 @@ func get(c *gin.Context) {
 	}
 
 	
-    c.Data(http.StatusOK, "text/plain", []byte("OK"))
+    w.Write([]byte("OK"))
 }
 
 func main() {
-    router := gin.Default()
-    router.GET("/benchmark", get)
+    r := chi.NewRouter()
+    r.Get("/benchmark", get)
 
-    router.Run("localhost:8080")
+    http.ListenAndServe(":8080", r)
 }
