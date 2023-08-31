@@ -41,11 +41,11 @@ func get(c *gin.Context) {
 	for i := 0; i < n; i++ {
 		sha256Hash := sha256.Sum256([]byte(content))
 
-    	fmt.Println(hex.EncodeToString(sha256Hash[:]))
+    	hex.EncodeToString(sha256Hash[:])
 	}
 
 	
-    c.IndentedJSON(http.StatusOK, content)
+    c.Data(http.StatusOK, "text/plain", []byte("OK"))
 }
 
 func main() {

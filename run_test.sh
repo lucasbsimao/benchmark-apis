@@ -49,9 +49,12 @@ function runPlotUsage {
         source benchmark/bin/activate
 
         pip install matplotlib
+    
+    else
+        source benchmark/bin/activate
     fi
 
-    python3 plot_usage_graphs.py
+    python3 plot_usage_graphs.py "$languageChoice"
 }
 
 function checkCpuStability {
@@ -109,7 +112,7 @@ function waitForAppToStabilize {
         response=$(curl -sf "$APP_URL")
 
         if [ "$response" == "OK" ]; then
-            echo "App started with PID: $EXEC_PID, waiting CPU ($last_cpu_usage %) to stabilize"
+            echo "App running with PID: $EXEC_PID, waiting CPU ($last_cpu_usage %) to stabilize"
             
             checkCpuStability
 
@@ -158,11 +161,6 @@ function runJavaApp {
     java -jar app/build/libs/app.jar > /dev/null 2>&1 &
     cd ..
 
-    if [ $? -ne 0 ]; then
-        echo "Error: Java build failed."
-        exit 1
-    fi
-
     EXEC_PID=$!
 
     echo "App starting with PID: $EXEC_PID"
@@ -184,31 +182,58 @@ function runNodeApp {
     echo "App starting with PID: $EXEC_PID"
 }
 
+function runGoApp {
+    echo "Executing Go app..."
+    
+    cd go && go get .
+    go build main.go
+    ./main >/dev/null 2>&1 &
+    cd ..
+
+    EXEC_PID=$!
+
+    echo "App starting with PID: $EXEC_PID"
+}
+
+function runKotlinApp {
+    echo "Executing Kotlin app..."
+    
+    cd kotlin && ./gradlew build
+    java -jar app/build/libs/app.jar > /dev/null 2>&1 &
+    cd ..
+
+    EXEC_PID=$!
+
+    echo "App starting with PID: $EXEC_PID"
+}
+
 function main {
     trap 'if [ $? -ge 2 ]; then cleanup $?; fi' EXIT SIGINT
     setup
 
     PS3="Choose a language to run the benchmark: "
-    options=("Java" "Node.js" "Go" "Kotlin")
+    options=("java" "nodejs" "go" "kotlin")
 
 select choice in "${options[@]}"; do
     case $REPLY in
         1)
             runJavaApp
+            languageChoice="${options[$REPLY-1]}"
             break
             ;;
         2)
             runNodeApp
+            languageChoice="${options[$REPLY-1]}"
             break
             ;;
         3)
-            echo "You selected Go"
-            # Add your Go code here
+            runGoApp
+            languageChoice="${options[$REPLY-1]}"
             break
             ;;
         4)
-            echo "You selected Kotlin"
-            # Add your Kotlin code here
+            runKotlinApp
+            languageChoice="${options[$REPLY-1]}"
             break
             ;;
         *)
@@ -216,6 +241,11 @@ select choice in "${options[@]}"; do
             ;;
     esac
 done
+    if [ $? -ne 0 ]; then
+        echo "Error: App start up failed."
+        exit 2
+    fi
+
     waitForAppToStabilize
 
     if [ $? -ne 0 ]; then

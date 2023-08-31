@@ -2,5 +2,6 @@ node_modules
 test-report.json*
 
 benchmark
-cpu_ram_plots.png
+*_figures
 output.csv
+main
