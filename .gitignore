@@ -5,3 +5,5 @@ benchmark
 *_figures
 output.csv
 main
+rust/target/*
+.idea/*
