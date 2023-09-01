@@ -156,6 +156,8 @@ function runBenchmark {
 
 function runJavaApp {
     echo "Executing Java app..."
+
+    sdk use java 17.0.8-zulu
     
     cd java && ./gradlew build
     java -jar app/build/libs/app.jar > /dev/null 2>&1 &
@@ -207,12 +209,40 @@ function runKotlinApp {
     echo "App starting with PID: $EXEC_PID"
 }
 
+function runRustApp {
+    echo "Executing Rust app..."
+    
+    cd rust && rustup default nightly
+    cargo run --release > /dev/null 2>&1 &
+    cd ..
+
+    EXEC_PID=$!
+
+    echo "App starting with PID: $EXEC_PID"
+}
+
+function runGraalApp {
+    echo "Executing Graal app..."
+
+    sdk use java 17.0.8-graalce
+    
+    cd java
+    ./gradlew nativeCompile
+    cd /app/build/native/nativeCompile
+    ./app > /dev/null 2>&1 &
+    cd -
+
+    EXEC_PID=$!
+
+    echo "App starting with PID: $EXEC_PID"
+}
+
 function main {
     trap 'if [ $? -ge 2 ]; then cleanup $?; fi' EXIT SIGINT
     setup
 
     PS3="Choose a language to run the benchmark: "
-    options=("java" "nodejs" "go" "kotlin")
+    options=("java" "nodejs" "go" "kotlin" "rust" "java_graal")
 
 select choice in "${options[@]}"; do
     case $REPLY in
@@ -233,6 +263,17 @@ select choice in "${options[@]}"; do
             ;;
         4)
             runKotlinApp
+            languageChoice="${options[$REPLY-1]}"
+            break
+            ;;
+        5)
+            runRustApp
+            languageChoice="${options[$REPLY-1]}"
+            break
+            ;;
+
+        6)
+            runGraalApp
             languageChoice="${options[$REPLY-1]}"
             break
             ;;
