@@ -19,7 +19,7 @@ func get(w http.ResponseWriter, r *http.Request) {
 
     n, err := strconv.Atoi(nStr)
 
-	data, err := os.ReadFile("txt")
+	data, err := os.ReadFile("/tmp/txt")
     if err != nil {
         fmt.Println(err)
         return
