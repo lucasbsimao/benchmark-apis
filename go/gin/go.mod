@@ -2,11 +2,7 @@ module benchmark
 
 go 1.20
 
-require (
-	github.com/gin-gonic/gin v1.9.1
-	github.com/go-chi/chi v1.5.4
-	github.com/go-chi/chi/v5 v5.0.10
-)
+require github.com/gin-gonic/gin v1.9.1
 
 require (
 	github.com/bytedance/sonic v1.9.1 // indirect

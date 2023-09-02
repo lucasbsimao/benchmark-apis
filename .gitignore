@@ -7,3 +7,4 @@ output.csv
 main
 rust/target/*
 .idea/*
+go/plot_usage_graphs.py

@@ -197,6 +197,20 @@ function runGoApp {
     echo "App starting with PID: $EXEC_PID"
 }
 
+function runGoSTDApp {
+    echo "Executing Go std app..."
+    
+    cd go/std && go get .
+    cp ../../plot_usage_graphs.py ../plot_usage_graphs.py
+    go build main.go
+    ./main >/dev/null 2>&1 &
+    cd ..
+
+    EXEC_PID=$!
+
+    echo "App starting with PID: $EXEC_PID"
+}
+
 function runKotlinApp {
     echo "Executing Kotlin app..."
     
@@ -242,7 +256,7 @@ function main {
     setup
 
     PS3="Choose a language to run the benchmark: "
-    options=("java" "nodejs" "go" "kotlin" "rust" "java_graal")
+    options=("java" "nodejs" "go" "kotlin" "rust" "java_graal" "go_std")
 
 select choice in "${options[@]}"; do
     case $REPLY in
@@ -271,9 +285,13 @@ select choice in "${options[@]}"; do
             languageChoice="${options[$REPLY-1]}"
             break
             ;;
-
         6)
             runGraalApp
+            languageChoice="${options[$REPLY-1]}"
+            break
+            ;;
+        7)
+            runGoSTDApp
             languageChoice="${options[$REPLY-1]}"
             break
             ;;
