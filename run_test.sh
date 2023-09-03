@@ -164,7 +164,7 @@ function runJavaApp {
     
     cd java/spring && ./gradlew build
     java -jar app/build/libs/app.jar > /dev/null 2>&1 &
-    cd ..
+    cd -
 
     EXEC_PID=$!
 
@@ -178,8 +178,8 @@ function runQuarkusApp {
     sdk use java 17.0.8-zulu
     
     cd java/quarkus && ./gradlew build
-    java -jar app/build/libs/app.jar > /dev/null 2>&1 &
-    cd ..
+    java -jar build/quarkus-app/quarkus-run.jar > /dev/null 2>&1 &
+    cd -
 
     EXEC_PID=$!
 
@@ -190,10 +190,10 @@ function runJavaMicronautsApp {
     echo "Executing Micronauts app..."
 
     source "$HOME/.sdkman/bin/sdkman-init.sh"
-    sdk use java 17.0.8-graalce
+    sdk use java 17.0.8-zulu
     
-    cd java/micronauts && ./gradlew nativeCompile
-    ./build/native/nativeCompile/app > /dev/null 2>&1 &
+    cd java/micronauts && ./gradlew build
+    java -jar build/libs/app-0.1-all-optimized.jar > /dev/null 2>&1 &
     cd -
 
     EXEC_PID=$!
@@ -277,7 +277,7 @@ function main {
 
     PS3="Choose a language to run the benchmark: "
 
-    options=("java_spring" "graal_spring" "graal_micronauts" "nodejs" "go_chi" "go_gin" "kotlin" "rust" )
+    options=("java_spring" "graal_spring" "graal_micronauts" "graal_quarkus" "nodejs" "go_chi" "go_gin" "kotlin" "rust" )
 
 select choice in "${options[@]}"; do
     case $REPLY in
@@ -297,26 +297,31 @@ select choice in "${options[@]}"; do
             break
             ;;
         4)
-            runNodeApp
+            runQuarkusApp
             languageChoice="${options[$REPLY-1]}"
             break
             ;;
         5)
+            runNodeApp
+            languageChoice="${options[$REPLY-1]}"
+            break
+            ;;
+        6)
             runGoApp "chi"
             languageChoice="${options[$REPLY-1]}"
             break
             ;;
-        6)
+        7)
             runGoApp "gin"
             languageChoice="${options[$REPLY-1]}"
             break
             ;;
-        7)
+        8)
             runKotlinApp
             languageChoice="${options[$REPLY-1]}"
             break
             ;;
-        6)
+        9)
             runRustApp
             languageChoice="${options[$REPLY-1]}"
             break
