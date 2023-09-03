@@ -27,7 +27,7 @@ function cleanup {
 }
 
 function setup {
-    echo "Starting setup..."
+    echo "Setting up..."
 
     local PORT=8080
     local PORT_PID=$(lsof -t -i :$PORT)
@@ -35,6 +35,10 @@ function setup {
     if [ -n "$PORT_PID" ]; then
         echo "Port $PORT is in use by process $PORT_PID. Exiting..."
         exit 1
+    fi
+
+    if [ ! -d benchmark_graphs ]; then
+        mkdir benchmark_graphs
     fi
 
     npm i > /dev/null 2>&1
@@ -91,9 +95,7 @@ END
 }
 
 function waitForAppToStabilize {
-    if [ -z "$USE_STABLE_STATE" ] || [ "$USE_STABLE_STATE" -ge 1 ]; then
-        continue
-    else
+    if [ ! -z "$USE_STABLE_STATE" ] && [ ! "$USE_STABLE_STATE" -ge 1 ]; then
         echo "Skipping stabilization phase..."
         return
     fi
@@ -157,11 +159,59 @@ function runBenchmark {
 function runJavaApp {
     echo "Executing Java app..."
 
+    source "$HOME/.sdkman/bin/sdkman-init.sh"
     sdk use java 17.0.8-zulu
     
-    cd java && ./gradlew build
+    cd java/spring && ./gradlew build
     java -jar app/build/libs/app.jar > /dev/null 2>&1 &
     cd ..
+
+    EXEC_PID=$!
+
+    echo "App starting with PID: $EXEC_PID"
+}
+
+function runQuarkusApp {
+    echo "Executing Quarkus app..."
+
+    source "$HOME/.sdkman/bin/sdkman-init.sh"
+    sdk use java 17.0.8-zulu
+    
+    cd java/quarkus && ./gradlew build
+    java -jar app/build/libs/app.jar > /dev/null 2>&1 &
+    cd ..
+
+    EXEC_PID=$!
+
+    echo "App starting with PID: $EXEC_PID"
+}
+
+function runJavaMicronautsApp {
+    echo "Executing Micronauts app..."
+
+    source "$HOME/.sdkman/bin/sdkman-init.sh"
+    sdk use java 17.0.8-graalce
+    
+    cd java/micronauts && ./gradlew nativeCompile
+    ./build/native/nativeCompile/app > /dev/null 2>&1 &
+    cd -
+
+    EXEC_PID=$!
+
+    echo "App starting with PID: $EXEC_PID"
+}
+
+function runGraalApp {
+    echo "Executing Graal app..."
+
+    source "$HOME/.sdkman/bin/sdkman-init.sh"
+    sdk use java 17.0.8-graalce
+    
+    cd java
+    ./gradlew nativeCompile
+    cd /app/build/native/nativeCompile
+    ./app > /dev/null 2>&1 &
+    cd -
 
     EXEC_PID=$!
 
@@ -185,12 +235,12 @@ function runNodeApp {
 }
 
 function runGoApp {
-    echo "Executing Go app..."
+    echo "Executing Go $1 app..."
     
-    cd go && go get .
+    cd go/$1 && go get .
     go build main.go
     ./main >/dev/null 2>&1 &
-    cd ..
+    cd - > /dev/null 2>&1
 
     EXEC_PID=$!
 
@@ -221,28 +271,13 @@ function runRustApp {
     echo "App starting with PID: $EXEC_PID"
 }
 
-function runGraalApp {
-    echo "Executing Graal app..."
-
-    sdk use java 17.0.8-graalce
-    
-    cd java
-    ./gradlew nativeCompile
-    cd /app/build/native/nativeCompile
-    ./app > /dev/null 2>&1 &
-    cd -
-
-    EXEC_PID=$!
-
-    echo "App starting with PID: $EXEC_PID"
-}
-
 function main {
     trap 'if [ $? -ge 2 ]; then cleanup $?; fi' EXIT SIGINT
     setup
 
     PS3="Choose a language to run the benchmark: "
-    options=("java" "nodejs" "go" "kotlin" "rust" "java_graal")
+
+    options=("java_spring" "graal_spring" "graal_micronauts" "nodejs" "go_chi" "go_gin" "kotlin" "rust" )
 
 select choice in "${options[@]}"; do
     case $REPLY in
@@ -252,28 +287,37 @@ select choice in "${options[@]}"; do
             break
             ;;
         2)
-            runNodeApp
+            runGraalApp
             languageChoice="${options[$REPLY-1]}"
             break
             ;;
         3)
-            runGoApp
+            runJavaMicronautsApp
             languageChoice="${options[$REPLY-1]}"
             break
             ;;
         4)
-            runKotlinApp
+            runNodeApp
             languageChoice="${options[$REPLY-1]}"
             break
             ;;
         5)
-            runRustApp
+            runGoApp "chi"
             languageChoice="${options[$REPLY-1]}"
             break
             ;;
-
         6)
-            runGraalApp
+            runGoApp "gin"
+            languageChoice="${options[$REPLY-1]}"
+            break
+            ;;
+        7)
+            runKotlinApp
+            languageChoice="${options[$REPLY-1]}"
+            break
+            ;;
+        6)
+            runRustApp
             languageChoice="${options[$REPLY-1]}"
             break
             ;;
