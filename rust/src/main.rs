@@ -7,7 +7,7 @@ use sha256::{digest};
 
 #[get("/?<n>")]
 fn hello(n: u8) -> String {
-    let contents = fs::read_to_string("txt")
+    let contents = fs::read_to_string("/tmp/txt")
         .expect("Should have been able to read the file");
 
     //println!("With text:\n{contents}");

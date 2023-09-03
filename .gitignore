@@ -1,9 +1,8 @@
 node_modules
 test-report.json*
 
-benchmark
+/benchmark/
 *_figures
 output.csv
-main
 rust/target/*
 .idea/*

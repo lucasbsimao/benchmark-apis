@@ -8,7 +8,7 @@ if len(sys.argv) < 2:
     print("Usage: python script.py <benchmark_language>")
     sys.exit(1)
 
-folder_name = sys.argv[1]
+folder_name = "benchmark_graphs/" + sys.argv[1]
 
 with open('test-report.json', 'r') as json_file:
     data = json.load(json_file)
@@ -40,17 +40,23 @@ if not os.path.exists(folder_name+"_figures"):
 
 plt.figure(figsize=(10, 6))
 plt.plot(timestamps, cpu_usage, label='CPU Usage')
-plt.title('CPU Usage Over Time')
-plt.xlabel('Time in seconds')
-plt.ylabel('CPU Usage (%)')
+plt.xlabel('Time in seconds', fontsize=16)
+plt.ylabel('CPU Usage (%)', fontsize=16)
+plt.yticks(fontsize=15)
+plt.xticks(fontsize=15)
+
+plt.subplots_adjust(left=0.1, right=0.95, top=0.93, bottom=0.12)
 
 plt.savefig(folder_name + '_figures/cpu_usage.png')
 plt.close()
 
 plt.plot(timestamps, ram_usage, label='RAM Usage')
-plt.title('RAM Usage Over Time')
-plt.xlabel('Time in seconds')
-plt.ylabel('RAM Usage (%)')
+plt.xlabel('Time in seconds', fontsize=16)
+plt.ylabel('RAM Usage (%)', fontsize=16)
+plt.yticks(fontsize=15)
+plt.xticks(fontsize=15)
+
+plt.subplots_adjust(left=0.1, right=0.95, top=0.93, bottom=0.12)
 
 plt.savefig(folder_name + '_figures/ram_usage.png')
 plt.close()
@@ -59,12 +65,18 @@ percentiles = list(latency_percentiles.keys())
 latency_values = [latency_percentiles[p] for p in percentiles]
 
 plt.figure(figsize=(10, 6))
+
 plt.bar(percentiles, latency_values, color='blue')
-plt.xlabel('Latency Percentile')
-plt.ylabel('Latency (ms)')
-plt.title('Latency Metrics')
-plt.ylim(0, max(latency_values) + 10) 
+plt.xlabel('Latency Percentile', fontsize=16)
+plt.ylabel('Latency (ms)', fontsize=16)
+plt.yticks(fontsize=15)
+plt.xticks(fontsize=15)
+
+plt.ylim(0, max(latency_values) + 10)
+
 plt.grid(axis='y', linestyle='--', alpha=0.7)
+
+plt.subplots_adjust(left=0.1, right=0.95, top=0.93, bottom=0.12)
 
 plt.savefig(folder_name + '_figures/latency.png')
 plt.close()
