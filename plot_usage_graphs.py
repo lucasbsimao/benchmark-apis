@@ -34,8 +34,8 @@ with open('output.csv', 'r') as file:
         ram_usage.append(float(row[2]))
 
 
-if not os.path.exists(folder_name+"_figures"):
-    os.mkdir(folder_name+"_figures")
+if not os.path.exists(folder_name):
+    os.makedirs(folder_name, exist_ok=True)
 
 
 plt.figure(figsize=(10, 6))
@@ -47,7 +47,7 @@ plt.xticks(fontsize=15)
 
 plt.subplots_adjust(left=0.1, right=0.95, top=0.93, bottom=0.12)
 
-plt.savefig(folder_name + '_figures/cpu_usage.png')
+plt.savefig(folder_name + '/cpu_usage.png')
 plt.close()
 
 plt.plot(timestamps, ram_usage, label='RAM Usage')
@@ -58,7 +58,7 @@ plt.xticks(fontsize=15)
 
 plt.subplots_adjust(left=0.1, right=0.95, top=0.93, bottom=0.12)
 
-plt.savefig(folder_name + '_figures/ram_usage.png')
+plt.savefig(folder_name + '/ram_usage.png')
 plt.close()
 
 percentiles = list(latency_percentiles.keys())
@@ -78,5 +78,5 @@ plt.grid(axis='y', linestyle='--', alpha=0.7)
 
 plt.subplots_adjust(left=0.1, right=0.95, top=0.93, bottom=0.12)
 
-plt.savefig(folder_name + '_figures/latency.png')
+plt.savefig(folder_name + '/latency.png')
 plt.close()

@@ -72,7 +72,6 @@ function checkCpuStability {
         python_cmd="python3"
     fi
 
-    # Use Python for floating-point comparison
     $python_cmd - <<END
 import sys
 
@@ -156,185 +155,48 @@ function runBenchmark {
     waitForAppToStabilize
 }
 
-function runJavaApp {
-    echo "Executing Java app..."
+function startBenchmarkApp {
+    options=()
+    while IFS= read -r -d $'\0' file; do
+        dir=$(dirname "$file")
+        relDir=${dir#./}
+        options+=("$relDir")
+    done < <(find . -name "runBenchmark.sh" -print0)
 
-    source "$HOME/.sdkman/bin/sdkman-init.sh"
-    sdk use java 17.0.8-zulu
-    
-    cd java/spring && ./gradlew build
-    java -jar app/build/libs/app.jar > /dev/null 2>&1 &
-    cd -
+    PS3="Choose a language to run the benchmark: "
 
-    EXEC_PID=$!
+select choice in "${options[@]}"; do
+    if [[ " ${options[*]} " == *" $choice "* ]]; then
+        echo "Executing $choice app..."
 
-    echo "App starting with PID: $EXEC_PID"
-}
+        local OLD_PWD=$(pwd)
+        cd $choice
 
-function runQuarkusApp {
-    echo "Executing Quarkus app..."
+        EXEC_PID=$(bash runBenchmark.sh | tail -n 1)
 
-    source "$HOME/.sdkman/bin/sdkman-init.sh"
-    sdk use java 17.0.8-zulu
-    
-    cd java/quarkus && ./gradlew build
-    java -jar build/quarkus-app/quarkus-run.jar > /dev/null 2>&1 &
-    cd -
+        cd "$OLD_PWD"
 
-    EXEC_PID=$!
+        if [ $? -ne 0 ]; then
+            echo "Error: App start up failed."
+            exit 2
+        fi
 
-    echo "App starting with PID: $EXEC_PID"
-}
+        languageChoice="$choice"
 
-function runJavaMicronautsApp {
-    echo "Executing Micronauts app..."
+        echo "App starting with PID: $EXEC_PID"
+        break
+    else
+        echo "Invalid option, please choose a valid number."
+    fi
+done
 
-    source "$HOME/.sdkman/bin/sdkman-init.sh"
-    sdk use java 17.0.8-zulu
-    
-    cd java/micronauts && ./gradlew build
-    java -jar build/libs/app-0.1-all-optimized.jar > /dev/null 2>&1 &
-    cd -
-
-    EXEC_PID=$!
-
-    echo "App starting with PID: $EXEC_PID"
-}
-
-function runGraalApp {
-    echo "Executing Graal app..."
-
-    source "$HOME/.sdkman/bin/sdkman-init.sh"
-    sdk use java 17.0.8-graalce
-    
-    cd java
-    ./gradlew nativeCompile
-    cd /app/build/native/nativeCompile
-    ./app > /dev/null 2>&1 &
-    cd -
-
-    EXEC_PID=$!
-
-    echo "App starting with PID: $EXEC_PID"
-}
-
-function runNodeApp {
-    echo "Executing Node app..."
-    
-    cd nodejs && npm i
-    npm run build
-    npm run start:prod 2>&1 &
-    cd ..
-
-    while [ -z $EXEC_PID ]; do
-        EXEC_PID=$(ps aux | grep "node dist/main" | grep -v "grep" | grep -v "sh -c" | awk '{print $2}')
-        sleep 1
-    done
-
-    echo "App starting with PID: $EXEC_PID"
-}
-
-function runGoApp {
-    echo "Executing Go $1 app..."
-    
-    cd go/$1 && go get .
-    go build main.go
-    ./main >/dev/null 2>&1 &
-    cd - > /dev/null 2>&1
-
-    EXEC_PID=$!
-
-    echo "App starting with PID: $EXEC_PID"
-}
-
-function runKotlinApp {
-    echo "Executing Kotlin app..."
-    
-    cd kotlin && ./gradlew build
-    java -jar app/build/libs/app.jar > /dev/null 2>&1 &
-    cd ..
-
-    EXEC_PID=$!
-
-    echo "App starting with PID: $EXEC_PID"
-}
-
-function runRustApp {
-    echo "Executing Rust app..."
-    
-    cd rust && rustup default nightly
-    cargo run --release > /dev/null 2>&1 &
-    cd ..
-
-    EXEC_PID=$!
-
-    echo "App starting with PID: $EXEC_PID"
 }
 
 function main {
     trap 'if [ $? -ge 2 ]; then cleanup $?; fi' EXIT SIGINT
     setup
 
-    PS3="Choose a language to run the benchmark: "
-
-    options=("java_spring" "graal_spring" "graal_micronauts" "graal_quarkus" "nodejs" "go_chi" "go_gin" "kotlin" "rust" )
-
-select choice in "${options[@]}"; do
-    case $REPLY in
-        1)
-            runJavaApp
-            languageChoice="${options[$REPLY-1]}"
-            break
-            ;;
-        2)
-            runGraalApp
-            languageChoice="${options[$REPLY-1]}"
-            break
-            ;;
-        3)
-            runJavaMicronautsApp
-            languageChoice="${options[$REPLY-1]}"
-            break
-            ;;
-        4)
-            runQuarkusApp
-            languageChoice="${options[$REPLY-1]}"
-            break
-            ;;
-        5)
-            runNodeApp
-            languageChoice="${options[$REPLY-1]}"
-            break
-            ;;
-        6)
-            runGoApp "chi"
-            languageChoice="${options[$REPLY-1]}"
-            break
-            ;;
-        7)
-            runGoApp "gin"
-            languageChoice="${options[$REPLY-1]}"
-            break
-            ;;
-        8)
-            runKotlinApp
-            languageChoice="${options[$REPLY-1]}"
-            break
-            ;;
-        9)
-            runRustApp
-            languageChoice="${options[$REPLY-1]}"
-            break
-            ;;
-        *)
-            echo "Invalid option, please choose a valid number."
-            ;;
-    esac
-done
-    if [ $? -ne 0 ]; then
-        echo "Error: App start up failed."
-        exit 2
-    fi
+    startBenchmarkApp
 
     waitForAppToStabilize
 

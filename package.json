@@ -4,7 +4,7 @@
   "description": "Client for the benchmark article",
   "main": "index.js",
   "scripts": {
-    "start": "artillery run --output test-report.json benchmark.yml; artillery report test-report.json"
+    "start": "artillery run --output test-report.json benchmark.yml"
   },
   "author": "Lucas Borsatto Simão",
   "license": "ISC",

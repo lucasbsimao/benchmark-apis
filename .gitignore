@@ -2,7 +2,7 @@ node_modules
 test-report.json*
 
 /benchmark/
-*_figures
+/benchmark_graphs/
 output.csv
 rust/target/*
 .idea/*
