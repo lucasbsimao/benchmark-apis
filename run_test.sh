@@ -1,6 +1,6 @@
 #!/bin/bash
 
-EXEC_PID=""
+CONTAINER_NAME=""
 TRACK_PID=""
 
 USE_STABLE_STATE=$1
@@ -13,8 +13,10 @@ function killProccesses {
         kill -9 "$TRACK_PID"
     fi
 
-    if [ -n "$EXEC_PID" ]; then
-        kill -9 "$EXEC_PID"
+    if [ -n "$CONTAINER_NAME" ]; then
+        cd $languageChoice
+        docker compose stop
+        cd -
     fi
 }
 
@@ -62,7 +64,7 @@ function runPlotUsage {
 }
 
 function checkCpuStability {
-    current_cpu_usage=$(ps -p $EXEC_PID -o %cpu | tail -n 1)
+    current_cpu_usage=$(docker stats --no-stream --format "{{.CPUPerc}}" $CONTAINER_NAME | sed 's/%//g')
 
     [ "$last_cpu_usage" == "0" ] && last_cpu_usage=$current_cpu_usage
 
@@ -113,7 +115,7 @@ function waitForAppToStabilize {
         response=$(curl -sf "$APP_URL")
 
         if [ "$response" == "OK" ]; then
-            echo "App running with PID: $EXEC_PID, waiting CPU ($last_cpu_usage %) to stabilize"
+            echo "App running in containter: $CONTAINER_NAME, waiting CPU ($last_cpu_usage %) to stabilize"
             
             checkCpuStability
 
@@ -129,7 +131,9 @@ function waitForAppToStabilize {
 
     if [ "$response" != "OK" ]; then
         echo "App did not reach stable state properly within the timeout period."
-        kill -9 $EXEC_PID
+        cd $languageChoice
+        docker compose stop
+        cd -
         exit 1
     fi
 }
@@ -143,9 +147,9 @@ function runBenchmark {
     fi
 
     while true; do
-        USAGE=$(sh -c "ps -p $EXEC_PID -o %cpu,%mem | awk 'NR==2 {print \$1\",\"\$2}'")
+        USAGE=$(docker stats --no-stream --format "{{.CPUPerc}},{{.MemPerc}}" $CONTAINER_NAME  | sed 's/%//g')
         echo "$SECONDS,$USAGE" >> "$OUTPUT_FILE"
-        sleep 1
+        sleep 0.5
     done &
 
     TRACK_PID=$!
@@ -172,7 +176,7 @@ select choice in "${options[@]}"; do
         local OLD_PWD=$(pwd)
         cd $choice
 
-        EXEC_PID=$(bash runBenchmark.sh | tail -n 1)
+        CONTAINER_NAME=$(bash runBenchmark.sh | tail -n 1)
 
         cd "$OLD_PWD"
 
@@ -183,7 +187,7 @@ select choice in "${options[@]}"; do
 
         languageChoice="$choice"
 
-        echo "App starting with PID: $EXEC_PID"
+        echo "App starting in container: $CONTAINER_NAME"
         break
     else
         echo "Invalid option, please choose a valid number."
