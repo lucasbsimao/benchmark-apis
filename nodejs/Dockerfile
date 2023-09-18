@@ -5,9 +5,9 @@ RUN echo '. "$HOME/.asdf/asdf.sh"' >> ~/.bashrc
 RUN echo '. "$HOME/.asdf/completions/asdf.bash"' >> ~/.bashrc
 RUN source ~/.bashrc
 
-RUN asdf plugin add rust
-RUN asdf install rust 1.71.1
-RUN asdf global rust 1.71.1
+RUN asdf plugin add node
+RUN asdf install node 18.17.0
+RUN asdf global node 18.17.0
 
 WORKDIR /app
 
