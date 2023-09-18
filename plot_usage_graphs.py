@@ -56,7 +56,7 @@ plt.ylabel('RAM Usage (%)', fontsize=16)
 plt.yticks(fontsize=15)
 plt.xticks(fontsize=15)
 
-plt.subplots_adjust(left=0.1, right=0.95, top=0.93, bottom=0.12)
+plt.subplots_adjust(left=0.12, right=0.9, top=0.93, bottom=0.12)
 
 plt.savefig(folder_name + '/ram_usage.png')
 plt.close()
