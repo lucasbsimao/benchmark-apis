@@ -5,7 +5,7 @@ config:
       arrivalRate: 10
       name: benchmark warm up
     - duration: 60
-      arrivalRate: 300
+      arrivalRate: 150
       name: benchmark spike
 scenarios:
   - flow:

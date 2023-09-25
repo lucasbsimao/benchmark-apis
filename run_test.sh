@@ -6,8 +6,10 @@ TRACK_PID=""
 USE_STABLE_STATE=$1
 
 
-function killProccesses {
-    echo "Killing processes..."
+function cleanUp {
+    echo "Cleaning up processes..."
+
+    rm $languageChoice/txt
     
     if [ -n "$TRACK_PID" ]; then
         kill -9 "$TRACK_PID"
@@ -15,15 +17,15 @@ function killProccesses {
 
     if [ -n "$CONTAINER_NAME" ]; then
         cd $languageChoice
-        docker compose stop
+        docker compose down
         cd -
     fi
 }
 
-function cleanup {
-    echo "Cleaning up..."
+function cleanUpAndExit {
+    echo "Cleaning up and exiting..."
 
-    killProccesses
+    cleanUp
     
     exit 0
 }
@@ -165,7 +167,7 @@ function startBenchmarkApp {
         dir=$(dirname "$file")
         relDir=${dir#./}
         options+=("$relDir")
-    done < <(find . -name "runBenchmark.sh" -print0)
+    done < <(find . -name "docker-compose.yaml" -print0)
 
     PS3="Choose a language to run the benchmark: "
 
@@ -174,9 +176,11 @@ select choice in "${options[@]}"; do
         echo "Executing $choice app..."
 
         local OLD_PWD=$(pwd)
+        cp txt $choice
         cd $choice
 
-        CONTAINER_NAME=$(bash runBenchmark.sh | tail -n 1)
+        docker compose up -d
+        CONTAINER_NAME=$(docker compose ps | awk 'NR==2 {print $1}')
 
         cd "$OLD_PWD"
 
@@ -197,7 +201,7 @@ done
 }
 
 function main {
-    trap 'if [ $? -ge 2 ]; then cleanup $?; fi' EXIT SIGINT
+    trap 'if [ $? -ge 2 ]; then cleanUpAndExit $?; fi' EXIT SIGINT
     setup
 
     startBenchmarkApp
@@ -210,7 +214,7 @@ function main {
     fi
     
     runBenchmark
-    killProccesses
+    cleanUp
 
     runPlotUsage
 }
