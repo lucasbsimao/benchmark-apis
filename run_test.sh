@@ -15,6 +15,7 @@ function cleanUp {
     
     if [ -n "$TRACK_PID" ]; then
         kill -9 "$TRACK_PID"
+        wait "$TRACK_PID" 2>/dev/null
     fi
 
     if [ -n "$CONTAINER_NAME" ]; then
