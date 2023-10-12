@@ -7,4 +7,4 @@ COPY txt /tmp/txt
 
 RUN ./gradlew build
 
-CMD java -jar app/build/libs/app.jar
+CMD java -Xms128m -Xmx512m -jar app/build/libs/app.jar

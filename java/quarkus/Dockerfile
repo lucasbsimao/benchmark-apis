@@ -7,4 +7,4 @@ COPY txt /tmp/txt
 
 RUN ./gradlew build
 
-CMD java -jar build/quarkus-app/quarkus-run.jar
+CMD java -Xms128m -Xmx512m  -jar build/quarkus-app/quarkus-run.jar
