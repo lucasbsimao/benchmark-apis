@@ -3,6 +3,8 @@
 CONTAINER_NAME=""
 TRACK_PID=""
 
+PROJECT_DIR=$(pwd)
+
 USE_STABLE_STATE=$1
 
 
@@ -17,6 +19,12 @@ function cleanUp {
 
     if [ -n "$CONTAINER_NAME" ]; then
         cd $languageChoice
+
+        local LOGS_PATH=$PROJECT_DIR/benchmark_logs/$languageChoice.txt
+        local LOGS_DIR=$(dirname "$LOGS_PATH")
+        mkdir -p $LOGS_DIR
+
+        docker compose logs > $LOGS_PATH
         docker compose down
         cd -
     fi
@@ -41,9 +49,7 @@ function setup {
         exit 1
     fi
 
-    if [ ! -d benchmark_graphs ]; then
-        mkdir benchmark_graphs
-    fi
+    mkdir -p benchmark_graphs
 
     npm i > /dev/null 2>&1
     cp txt /tmp/
@@ -133,9 +139,7 @@ function waitForAppToStabilize {
 
     if [ "$response" != "OK" ]; then
         echo "App did not reach stable state properly within the timeout period."
-        cd $languageChoice
-        docker compose stop
-        cd -
+        cleanUp
         exit 1
     fi
 }
@@ -175,14 +179,13 @@ select choice in "${options[@]}"; do
     if [[ " ${options[*]} " == *" $choice "* ]]; then
         echo "Executing $choice app..."
 
-        local OLD_PWD=$(pwd)
         cp txt $choice
         cd $choice
 
-        docker compose up -d
+        docker compose up -d --build
         CONTAINER_NAME=$(docker compose ps | awk 'NR==2 {print $1}')
 
-        cd "$OLD_PWD"
+        cd "$PROJECT_DIR"
 
         if [ $? -ne 0 ]; then
             echo "Error: App start up failed."
