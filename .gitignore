@@ -2,6 +2,7 @@ node_modules
 test-report.json*
 
 /benchmark/
+/benchmark_graphs/
 /benchmark_logs/
 output.csv
 rust/target/*
