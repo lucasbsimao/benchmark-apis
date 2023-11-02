@@ -1,0 +1,12 @@
+services:
+  go:
+    build: .
+    ports:
+      - 8080:8080
+    environment:
+      - GIN_MODE=release
+    deploy:
+      resources:
+        limits:
+          cpus: '6'
+          memory: 8g

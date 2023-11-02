@@ -1,27 +1,40 @@
 #!/bin/bash
 
-EXEC_PID=""
+CONTAINER_NAME=""
 TRACK_PID=""
+
+PROJECT_DIR=$(pwd)
 
 USE_STABLE_STATE=$1
 
 
-function killProccesses {
-    echo "Killing processes..."
+function cleanUp {
+    echo "Cleaning up processes..."
+
+    rm $languageChoice/txt
     
     if [ -n "$TRACK_PID" ]; then
         kill -9 "$TRACK_PID"
+        wait "$TRACK_PID" 2>/dev/null
     fi
 
-    if [ -n "$EXEC_PID" ]; then
-        kill -9 "$EXEC_PID"
+    if [ -n "$CONTAINER_NAME" ]; then
+        cd $languageChoice
+
+        local LOGS_PATH=$PROJECT_DIR/benchmark_logs/$languageChoice.txt
+        local LOGS_DIR=$(dirname "$LOGS_PATH")
+        mkdir -p $LOGS_DIR
+
+        docker compose logs > $LOGS_PATH
+        docker compose down
+        cd -
     fi
 }
 
-function cleanup {
-    echo "Cleaning up..."
+function cleanUpAndExit {
+    echo "Cleaning up and exiting..."
 
-    killProccesses
+    cleanUp
     
     exit 0
 }
@@ -37,9 +50,7 @@ function setup {
         exit 1
     fi
 
-    if [ ! -d benchmark_graphs ]; then
-        mkdir benchmark_graphs
-    fi
+    mkdir -p benchmark_graphs
 
     npm i > /dev/null 2>&1
     cp txt /tmp/
@@ -62,7 +73,7 @@ function runPlotUsage {
 }
 
 function checkCpuStability {
-    current_cpu_usage=$(ps -p $EXEC_PID -o %cpu | tail -n 1)
+    current_cpu_usage=$(docker stats --no-stream --format "{{.CPUPerc}}" $CONTAINER_NAME | sed 's/%//g')
 
     [ "$last_cpu_usage" == "0" ] && last_cpu_usage=$current_cpu_usage
 
@@ -113,7 +124,7 @@ function waitForAppToStabilize {
         response=$(curl -sf "$APP_URL")
 
         if [ "$response" == "OK" ]; then
-            echo "App running with PID: $EXEC_PID, waiting CPU ($last_cpu_usage %) to stabilize"
+            echo "App running in containter: $CONTAINER_NAME, waiting CPU ($last_cpu_usage %) to stabilize"
             
             checkCpuStability
 
@@ -129,7 +140,7 @@ function waitForAppToStabilize {
 
     if [ "$response" != "OK" ]; then
         echo "App did not reach stable state properly within the timeout period."
-        kill -9 $EXEC_PID
+        cleanUp
         exit 1
     fi
 }
@@ -143,9 +154,9 @@ function runBenchmark {
     fi
 
     while true; do
-        USAGE=$(sh -c "ps -p $EXEC_PID -o %cpu,%mem | awk 'NR==2 {print \$1\",\"\$2}'")
+        USAGE=$(docker stats --no-stream --format "{{.CPUPerc}},{{.MemPerc}}" $CONTAINER_NAME  | sed 's/%//g')
         echo "$SECONDS,$USAGE" >> "$OUTPUT_FILE"
-        sleep 1
+        sleep 0.5
     done &
 
     TRACK_PID=$!
@@ -161,7 +172,7 @@ function startBenchmarkApp {
         dir=$(dirname "$file")
         relDir=${dir#./}
         options+=("$relDir")
-    done < <(find . -name "runBenchmark.sh" -print0)
+    done < <(find . -name "docker-compose.yaml" -print0)
 
     PS3="Choose a language to run the benchmark: "
 
@@ -169,12 +180,13 @@ select choice in "${options[@]}"; do
     if [[ " ${options[*]} " == *" $choice "* ]]; then
         echo "Executing $choice app..."
 
-        local OLD_PWD=$(pwd)
+        cp txt $choice
         cd $choice
 
-        EXEC_PID=$(bash runBenchmark.sh | tail -n 1)
+        docker compose up -d --build
+        CONTAINER_NAME=$(docker compose ps | awk 'NR==2 {print $1}')
 
-        cd "$OLD_PWD"
+        cd "$PROJECT_DIR"
 
         if [ $? -ne 0 ]; then
             echo "Error: App start up failed."
@@ -183,7 +195,7 @@ select choice in "${options[@]}"; do
 
         languageChoice="$choice"
 
-        echo "App starting with PID: $EXEC_PID"
+        echo "App starting in container: $CONTAINER_NAME"
         break
     else
         echo "Invalid option, please choose a valid number."
@@ -193,7 +205,7 @@ done
 }
 
 function main {
-    trap 'if [ $? -ge 2 ]; then cleanup $?; fi' EXIT SIGINT
+    trap 'if [ $? -ge 2 ]; then cleanUpAndExit $?; fi' EXIT SIGINT
     setup
 
     startBenchmarkApp
@@ -206,7 +218,7 @@ function main {
     fi
     
     runBenchmark
-    killProccesses
+    cleanUp
 
     runPlotUsage
 }
