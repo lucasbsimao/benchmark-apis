@@ -11,7 +11,7 @@ USE_STABLE_STATE=$1
 function cleanUp {
     echo "Cleaning up processes..."
 
-    rm $languageChoice/txt
+    rm -f $languageChoice/txt
     
     if [ -n "$TRACK_PID" ]; then
         kill -9 "$TRACK_PID"
@@ -174,10 +174,16 @@ function startBenchmarkApp {
         options+=("$relDir")
     done < <(find . -name "docker-compose.yaml" -print0)
 
+    options+=("exit")
+
     PS3="Choose a language to run the benchmark: "
 
 select choice in "${options[@]}"; do
     if [[ " ${options[*]} " == *" $choice "* ]]; then
+        if [ $choice = "exit" ]; then
+            exit 0
+        fi 
+
         echo "Executing $choice app..."
 
         cp txt $choice
