@@ -69,7 +69,7 @@ function runPlotUsage {
         source benchmark/bin/activate
     fi
 
-    python3 plot_usage_graphs.py "$languageChoice"
+    python3 plot_saturation_latency_metrics.py "$languageChoice"
 }
 
 function checkCpuStability {
