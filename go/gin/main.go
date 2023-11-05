@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	"crypto/sha256"
-    "encoding/hex"
 
     "github.com/gin-gonic/gin"
 )
@@ -24,16 +23,13 @@ func get(c *gin.Context) {
         fmt.Println(err)
         return
     }
-
 	
     content := string(data)
+    bytes := []byte(content)
 
 	for i := 0; i < n; i++ {
-		sha256Hash := sha256.Sum256([]byte(content))
-
-    	hex.EncodeToString(sha256Hash[:])
+		sha256.Sum256(bytes)
 	}
-
 	
     c.Data(http.StatusOK, "text/plain", []byte("OK"))
 }

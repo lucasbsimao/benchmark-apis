@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	"crypto/sha256"
-    "encoding/hex"
 
     "github.com/go-chi/chi"
 )
@@ -27,11 +26,10 @@ func get(w http.ResponseWriter, r *http.Request) {
 
 	
     content := string(data)
+    bytes := []byte(content)
 
 	for i := 0; i < n; i++ {
-		sha256Hash := sha256.Sum256([]byte(content))
-
-    	hex.EncodeToString(sha256Hash[:])
+		sha256.Sum256(bytes)
 	}
 
 	
