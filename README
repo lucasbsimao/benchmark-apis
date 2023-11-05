@@ -24,3 +24,5 @@ You can create a benchmark with a custom language or framework. You just have to
 ```
 bash run_benchmark.sh
 ```
+
+In case of any errors, you can find the logs for your API inside ```benchmark_logs``` folder. And results are found inside ```benchmark_graphs``` folder. 
