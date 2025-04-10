@@ -14,7 +14,7 @@ import (
 
 func get(w http.ResponseWriter, r *http.Request) {
 
-	nStr := chi.URLParam(r, "n")
+	nStr := r.URL.Query().Get("n")
 
     n, err := strconv.Atoi(nStr)
 

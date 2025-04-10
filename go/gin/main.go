@@ -35,7 +35,8 @@ func get(c *gin.Context) {
 }
 
 func main() {
-    router := gin.Default()
+    gin.SetMode(gin.ReleaseMode)
+    router := gin.New()
     router.GET("/benchmark", get)
 
     router.Run("0.0.0.0:8080")
