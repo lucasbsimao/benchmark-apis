@@ -4,25 +4,29 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
-
-import java.nio.file.Files;
-import java.io.*;
-import java.security.MessageDigest;
+import jakarta.ws.rs.core.Response;
 
 @Path("/benchmark")
 public class BenchmarkResource {
 
-    @GET
-    public String benchmark(@QueryParam("n") Integer n) throws Exception {
-        String file = "/tmp/txt";
-
-        byte[] fileContents = Files.readAllBytes(new File(file).toPath());
+    private double compute(int n) {
+        double result = 0.0;
+        double[] temp = new double[n];
 
         for (int i = 0; i < n; i++) {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            md.digest(fileContents);
+            temp[i] = Math.sqrt(i * i + i);
+            result += temp[i];
         }
 
-        return "OK";
+        return result;
+    }
+
+    @GET
+    public Response  benchmark(@QueryParam("n") Integer n) throws Exception {
+        double result = compute(n);
+
+        return Response.ok("OK")
+                .header("X-Benchmark-Result", Double.toString(result))
+                .build();
     }
 }
