@@ -3,39 +3,41 @@ package main
 import (
     "net/http"
 
-	"os"
-	"strconv"
-	"fmt"
+    "math"
 
-	"crypto/sha256"
+	"strconv"
 
     "github.com/gin-gonic/gin"
 )
+
+func compute(n int) int {
+	result := 0
+
+    temp := make([]int, n)
+	for i := 0; i < n; i++ {
+		temp[i] = int(math.Sqrt(float64(i*i + i)))
+		result += temp[i]
+	}
+	
+    return result
+}
 
 func get(c *gin.Context) {
 
 	nStr := c.Query("n")
 
-    n, err := strconv.Atoi(nStr)
+    n, _ := strconv.Atoi(nStr)
 
-	data, err := os.ReadFile("/tmp/txt")
-    if err != nil {
-        fmt.Println(err)
-        return
-    }
-	
-    content := string(data)
-    bytes := []byte(content)
+	result := compute(n)
 
-	for i := 0; i < n; i++ {
-		sha256.Sum256(bytes)
-	}
+	c.Header("X-Benchmark-Result", strconv.Itoa(result))
 	
     c.Data(http.StatusOK, "text/plain", []byte("OK"))
 }
 
 func main() {
-    router := gin.Default()
+    gin.SetMode(gin.ReleaseMode)
+    router := gin.New()
     router.GET("/benchmark", get)
 
     router.Run("0.0.0.0:8080")
