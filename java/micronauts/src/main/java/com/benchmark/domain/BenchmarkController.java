@@ -3,26 +3,28 @@ package com.benchmark.domain;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.QueryValue;
-
-
-import java.io.*;
-import java.nio.file.Files;
-import java.security.MessageDigest;
-
+import io.micronaut.http.HttpResponse;
 @Controller("/benchmark")
 public class BenchmarkController {
 
-    @Get
-    public String get(@QueryValue Integer n) throws Exception {
-        String file = "/tmp/txt";
-        byte[] fileContents = Files.readAllBytes(new File(file).toPath());
+    private double compute(int n) {
+        double result = 0.0;
+        double[] temp = new double[n];
 
         for (int i = 0; i < n; i++) {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            md.digest(fileContents);
+            temp[i] = Math.sqrt(i * i + i);
+            result += temp[i];
         }
 
-        return "OK";
+        return result;
+    }
+
+    @Get
+    public HttpResponse<String> get(@QueryValue Integer n) throws Exception {
+        double result = compute(n);
+
+        return HttpResponse.ok("OK")
+                .header("X-Benchmark-Result", Double.toString(result));
     }
 
 }

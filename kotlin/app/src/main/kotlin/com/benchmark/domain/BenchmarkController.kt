@@ -1,26 +1,31 @@
 package com.benchmark.domain
 
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import java.nio.file.Files
-import java.nio.file.Paths
-import java.security.MessageDigest
 
-@RestController()
+@RestController
 class BenchmarkController {
-    @GetMapping("/benchmark")
-    suspend fun get(@RequestParam n: Int): String {
-        val file = "/tmp/txt"
 
-        val fileContents = Files.readAllBytes(Paths.get(file))
+    private fun compute(n: Int): Double {
+        var result = 0.0
+        val temp = DoubleArray(n)
 
-        for (i in 1..n) {
-            val md = MessageDigest.getInstance("SHA-256")
-            md.digest(fileContents)
+        for (i in 0 until n) {
+            temp[i] = kotlin.math.sqrt((i * i + i).toDouble())
+            result += temp[i]
         }
 
-        return "OK"
+        return result
     }
 
+    @GetMapping("/benchmark")
+    suspend fun get(@RequestParam n: Int): ResponseEntity<String> {
+        val result = compute(n)
+
+        return ResponseEntity.ok()
+            .header("X-Benchmark-Result", result.toString())
+            .body("OK")
+    }
 }

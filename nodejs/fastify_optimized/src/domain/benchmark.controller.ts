@@ -1,4 +1,4 @@
-import { Controller, Get, Logger, Query, Res } from '@nestjs/common';
+import { Controller, Get, Query, Res } from '@nestjs/common';
 import { Response } from 'express'
 @Controller('benchmark')
 export class BenchmarkController {

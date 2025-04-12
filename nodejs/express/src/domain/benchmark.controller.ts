@@ -1,27 +1,25 @@
-import { Controller, Get, Logger, Query } from '@nestjs/common';
-import { promises as fsPromises } from 'fs';
-import * as crypto from "crypto";
-
+import { Controller, Get, Query, Res } from '@nestjs/common';
+import { Response } from 'express'
 @Controller('benchmark')
 export class BenchmarkController {
-    private readonly logger = new Logger(BenchmarkController.name);
+    compute(n: number): number {
+        let result = 0;
+        const temp = new Array(n);
+
+        for (let i = 0; i < n; i++) {
+          temp[i] = Math.sqrt(i * i + i);
+          result += temp[i];
+        }
+
+        return result;
+    }
 
     @Get()
-    async createUser(@Query('n') n: number) : Promise<string> {
+    async createUser(@Query('n') n: number, @Res({ passthrough: true }) res: Response) : Promise<string> {
+        const result = this.compute(n);
 
-        const file = "/tmp/txt";
-
-        try {
-            const contents = await fsPromises.readFile(file, 'utf-8');
-
-            for(let i = 0; i < n; i++) {
-                crypto.createHash('sha256').update(contents).digest();
-            }
-        
-            return "OK";
-        } catch (err) {
-            console.log(err.stack);
-            return 'Something went wrong';
-        }
+        res.header('X-Benchmark-Result', result.toString());
+    
+        return "OK";
     }
 }
